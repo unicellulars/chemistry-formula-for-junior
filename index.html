@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化學式快問快答 🧪</title>
+    <style>
+        :root {
+            --primary: #3b82f6; /* 截圖中的亮藍色 */
+            --primary-hover: #2563eb;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #1e3a8a; /* 深藍色標題 */
+            --text-main: #374151;
+            --gray-light: #f3f4f6;
+            --gray-border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+
+        .quiz-container {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 24px; /* 更圓潤的外觀 */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-sizing: border-box;
+        }
+
+        h1.main-title { 
+            font-size: 38px;
+            font-weight: 800;
+            color: var(--dark); 
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+        }
+        
+        .sub-title {
+            color: #6b7280;
+            font-size: 16px;
+            margin: 0 0 30px 0;
+        }
+
+        h2.section-title {
+            text-align: left;
+            font-size: 18px;
+            color: #374151;
+            margin: 25px 0 12px 0;
+            font-weight: 700;
+        }
+        
+        .card { display: none; }
+        .card.active { display: block; }
+
+        /* 網格按鈕排版 (還原截圖樣式) */
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .selectable-btn {
+            background: white;
+            color: #4b5563;
+            border: 2px solid var(--gray-border);
+            padding: 14px 10px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .selectable-btn:hover {
+            border-color: #9ca3af;
+            background: #fafafa;
+        }
+
+        /* 被選中時的藍色高亮狀態 */
+        .selectable-btn.selected {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* 底部大型主要動作按鈕 */
+        .action-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            font-size: 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s, transform 0.1s;
+            font-weight: 700;
+            margin-top: 35px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .action-btn:hover { background-color: var(--primary-hover); }
+        .action-btn:active { transform: scale(0.99); }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 10px;
+            margin-top: 15px;
+            cursor: pointer;
+            width: auto;
+            display: inline-block;
+            font-weight: 500;
+        }
+        .btn-secondary:hover { 
+            background-color: #f3f4f6; 
+            color: #374151;
+        }
+
+        /* 遊戲進行中畫面 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .timer {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--danger);
+            margin: 15px 0;
+            background: #fdf2f2;
+            padding: 5px 20px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .question-display {
+            font-size: 38px;
+            font-weight: bold;
+            margin: 30px 0;
+            color: #111827;
+            min-height: 55px;
+        }
+        .question-display sub { font-size: 0.5em; bottom: -0.1em; }
+
+        .input-group {
+            margin: 25px 0;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--gray-border);
+            border-radius: 12px;
+            font-size: 18px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* 挑戰結果結算畫面 */
+        .result-item {
+            text-align: left;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 10px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .correct { background-color: #d4edda; color: #155724; border-left: 5px solid var(--success); }
+        .wrong { background-color: #f8d7da; color: #721c24; border-left: 5px solid var(--danger); }
+        
+        .summary {
+            font-size: 18px;
+            margin-bottom: 25px;
+            font-weight: bold;
+            line-height: 1.6;
+            background: #ebf3fc;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        
+        .scrollbox {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 25px;
+            border: 1px solid var(--gray-border);
+            border-radius: 12px;
+            padding: 10px;
+            background: #f9fafb;
+        }
+
+        /* 題庫檢視區域 */
+        .database-container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            display: none;
+            box-sizing: border-box;
+        }
+        .database-container.show { display: block; }
+        .database-container h2 { color: var(--dark); border-bottom: 2px solid #eff6ff; padding-bottom: 5px; margin-top: 30px; font-size: 20px;}
+        .database-container h3 { color: #4b5563; margin-top: 15px; font-size: 16px;}
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+        td {
+            border: 1px solid var(--gray-border);
+            padding: 12px;
+            text-align: left;
+            width: 50%;
+            font-size: 15px;
+        }
+        tr:nth-child(even) { background-color: #f9fafb; }
+        td sub { font-size: 0.65em; bottom: -0.1em; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="setup-card" class="card active">
+        <h1 class="main-title">化學式快問快答</h1>
+        <p class="sub-title">一次出現一題，每題限時 10 秒！輸入完按 Enter 即可跳下一題。</p>
+        
+        <h2 class="section-title">1. 選擇測驗模式</h2>
+        <div class="option-grid">
+            <button class="selectable-btn selected" data-type="mode" data-value="1">中 ➔ 英</button>
+            <button class="selectable-btn" data-type="mode" data-value="2">英 ➔ 中</button>
+            <button class="selectable-btn" data-type="mode" data-value="3">雙向隨機</button>
+        </div>
+        
+        <h2 class="section-title">2. 設定測驗題數</h2>
+        <div class="option-grid grid-4">
+            <button class="selectable-btn selected" data-type="amount" data-value="5">5 題</button>
+            <button class="selectable-btn" data-type="amount" data-value="10">10 題</button>
+            <button class="selectable-btn" data-type="amount" data-value="15">15 題</button>
+            <button class="selectable-btn" data-type="amount" data-value="20">20 題</button>
+        </div>
+        
+        <button class="action-btn" onclick="startQuiz()">🔥 開始挑戰</button>
+        <div>
+            <button class="btn-secondary" onclick="toggleDatabase()">📝 查看/隱藏完整題庫</button>
+        </div>
+        <p id="pool-count-info" style="font-size: 12px; color: #9ca3af; margin-top: 15px;">題庫載入中...</p>
+    </div>
+
+    <div id="quiz-card" class="card">
+        <div class="status-bar">
+            <span id="progress-text">進度: 1/5</span>
+            <span id="score-text">目前得分: 0</span>
+        </div>
+        <div><span id="timer-display" class="timer">10</span></div>
+        <div id="question-text" class="question-display">---</div>
+        
+        <div class="input-group">
+            <input type="text" id="answer-input" placeholder="請輸入答案並按 Enter..." autocomplete="off">
+        </div>
+        <button class="action-btn" style="margin-top:0;" onclick="submitAnswer()">送出答案</button>
+    </div>
+
+    <div id="result-card" class="card">
+        <h1 style="color: var(--dark); font-weight:800;">挑戰結束！🎉</h1>
+        <div id="summary-text" class="summary"></div>
+        <div class="scrollbox" id="detailed-results"></div>
+        <button class="action-btn" onclick="resetQuiz()">再玩一次 🔄</button>
+    </div>
+</div>
+
+<div id="database-area" class="database-container">
+    <h3 style="text-align: center; color: var(--primary); margin-top:0; font-weight: 800; font-size: 18px;">＝化學式複習表＝</h3>
+    
+    <section class="chem-group">
+      <h2>第一類：酸、鹼、鹽類</h2>
+    
+      <h3>硝酸類</h3>
+      <table>
+        <tr><td>硝酸</td><td>HNO<sub>3</sub></td></tr>
+        <tr><td>硝酸鈉</td><td>NaNO<sub>3</sub></td></tr>
+        <tr><td>硝酸鉀</td><td>KNO<sub>3</sub></td></tr>
+        <tr><td>硝酸鈣</td><td>Ca(NO<sub>3</sub>)<sub>2</sub></td></tr>
+        <tr><td>硝酸鎂</td><td>Mg(NO<sub>3</sub>)<sub>2</sub></td></tr>
+        <tr><td>硝酸鋇</td><td>Ba(NO<sub>3</sub>)<sub>2</sub></td></tr>
+        <tr><td>硝酸銨</td><td>NH<sub>4</sub>NO<sub>3</sub></td></tr>
+        <tr><td>硝酸鉛</td><td>Pb(NO<sub>3</sub>)<sub>2</sub></td></tr>
+        <tr><td>硝酸銅</td><td>Cu(NO<sub>3</sub>)<sub>2</sub></td></tr>
+      </table>
+    
+      <h3>氫氧化物類</h3>
+      <table>
+        <tr><td>氫氧化鈉</td><td>NaOH</td></tr>
+        <tr><td>氫氧化鉀</td><td>KOH</td></tr>
+        <tr><td>氫氧化鈣</td><td>Ca(OH)<sub>2</sub></td></tr>
+        <tr><td>氫氧化鎂</td><td>Mg(OH)<sub>2</sub></td></tr>
+        <tr><td>氫氧化鋇</td><td>Ba(OH)<sub>2</sub></td></tr>
+        <tr><td>氫氧化銨</td><td>NH<sub>4</sub>OH</td></tr>
+        <tr><td>氫氧化鐵</td><td>Fe(OH)<sub>3</sub></td></tr>
+        <tr><td>氫氧化鋁</td><td>Al(OH)<sub>3</sub></td></tr>
+        <tr><td>氨水</td><td>NH<sub>3</sub>·H<sub>2</sub>O</td></tr>
+      </table>
+    
+      <h3>鹵素類</h3>
+      <table>
+        <tr><td>氯化氫</td><td>HCl</td></tr>
+        <tr><td>氯化鈉</td><td>NaCl</td></tr>
+        <tr><td>氯化鉀</td><td>KCl</td></tr>
+        <tr><td>氯化鈣</td><td>CaCl<sub>2</sub></td></tr>
+        <tr><td>氯化鋇</td><td>BaCl<sub>2</sub></td></tr>
+        <tr><td>氯化銀</td><td>AgCl</td></tr>
+        <tr><td>氯化鐵</td><td>FeCl<sub>3</sub></td></tr>
+        <tr><td>氯化銨</td><td>NH<sub>4</sub>Cl</td></tr>
+        <tr><td>氯化亞鐵</td><td>FeCl<sub>2</sub></td></tr>
+        <tr><td>溴化氫</td><td>HBr</td></tr>
+        <tr><td>溴水</td><td>Br<sub>2</sub></td></tr>
+        <tr><td>氫氟酸</td><td>HF</td></tr>
+        <tr><td>碘化鉀</td><td>KI</td></tr>
+      </table>
+    
+      <h3>其他常見的酸類、鹽類</h3>
+      <table>
+        <tr><td>亞硫酸</td><td>H<sub>2</sub>SO<sub>3</sub></td></tr>
+        <tr><td>鉻酸</td><td>H<sub>2</sub>CrO<sub>4</sub></td></tr>
+        <tr><td>二鉻酸</td><td>H<sub>2</sub>Cr<sub>2</sub>O<sub>7</sub></td></tr>
+        <tr><td>過氯酸</td><td>HClLO<sub>4</sub></td></tr>
+        <tr><td>氯酸</td><td>HClO<sub>3</sub></td></tr>
+        <tr><td>亞氯酸</td><td>HClO<sub>2</sub></td></tr>
+        <tr><td>次氯酸</td><td>HClO</td></tr>
+        <tr><td>鉻酸鉀</td><td>K<sub>2</sub>CrO<sub>4</sub></td></tr>
+        <tr><td>二鉻酸鉀</td><td>K<sub>2</sub>Cr<sub>2</sub>O<sub>7</sub></td></tr>
+        <tr><td>硫代硫酸鈉</td><td>Na<sub>2</sub>S<sub>2</sub>O<sub>3</sub></td></tr>
+        <tr><td>碳酸鈉</td><td>Na<sub>2</sub>CO<sub>3</sub></td></tr>
+        <tr><td>碳酸氫鈉</td><td>NaHCO<sub>3</sub></td></tr>
+      </table>
+    </section>
+    
+    <section class="chem-group">
+      <h2>第二類：氧化物</h2>
+      <table>
+        <tr><td>氧化鈣</td><td>CaO</td></tr>
+        <tr><td>氧化鎂</td><td>MgO</td></tr>
+        <tr><td>氧化銅</td><td>CuO</td></tr>
+        <tr><td>氧化鋁</td><td>Al<sub>2</sub>O<sub>3</sub></td></tr>
+        <tr><td>氧化亞銅</td><td>Cu<sub>2</sub>O</td></tr> 
+        <tr><td>氧化汞</td><td>HgO</td></tr>
+        <tr><td>一氧化碳</td><td>CO</td></tr>
+        <tr><td>二氧化碳</td><td>CO<sub>2</sub></td></tr>
+        <tr><td>一氧化氮</td><td>NO</td></tr>
+        <tr><td>二氧化氮</td><td>NO<sub>2</sub></td></tr>
+        <tr><td>四氧化二氮</td><td>N<sub>2</sub>O<sub>4</sub></td></tr>
+        <tr><td>二氧化硫</td><td>SO<sub>2</sub></td></tr>
+        <tr><td>二氧化錳</td><td>MnO<sub>2</sub></td></tr>
+        <tr><td>過氧化氫</td><td>H<sub>2</sub>O<sub>2</sub></td></tr>
+        <tr><td>二氧化矽</td><td>SiO<sub>2</sub></td></tr>
+      </table>
+    </section>
+    
+    <section class="chem-group">
+      <h2>第三類：氣體類</h2>
+      <table>
+        <tr><td>氦氣</td><td>He</td></tr>
+        <tr><td>氖氣</td><td>Ne</td></tr>
+        <tr><td>氬氣</td><td>Ar</td></tr>
+        <tr><td>氪氣</td><td>Kr</td></tr> 
+        <tr><td>氧氣</td><td>O<sub>2</sub></td></tr>
+        <tr><td>氮氣</td><td>N<sub>2</sub></td></tr>
+        <tr><td>氫氣</td><td>H<sub>2</sub></td></tr>
+        <tr><td>氟氣</td><td>F<sub>2</sub></td></tr>
+        <tr><td>氯氣</td><td>Cl<sub>2</sub></td></tr>
+        <tr><td>臭氧</td><td>O<sub>3</sub></td></tr>
+        <tr><td>氨氣</td><td>NH<sub>4</sub></td></tr>
+      </table>
+    </section>
+    
+    <section class="chem-group">
+      <h2>第四類：有機物類</h2>
+    
+      <h3>烷類 (n=1-10)</h3>
+      <table>
+        <tr><td>甲烷</td><td>CH<sub>4</sub></td></tr>
+        <tr><td>乙烷</td><td>C<sub>2</sub>H<sub>6</sub></td></tr>
+        <tr><td>丙烷</td><td>C<sub>3</sub>H<sub>8</sub></td></tr>
+        <tr><td>丁烷</td><td>C<sub>4</sub>H<sub>10</sub></td></tr>
+        <tr><td>戊烷</td><td>C<sub>5</sub>H<sub>12</sub></td></tr>
+        <tr><td>己烷</td><td>C<sub>6</sub>H<sub>14</sub></td></tr>
+        <tr><td>庚烷</td><td>C<sub>7</sub>H<sub>16</sub></td></tr>
+        <tr><td>辛烷</td><td>C<sub>8</sub>H<sub>18</sub></td></tr>
+        <tr><td>壬烷</td><td>C<sub>9</sub>H<sub>20</sub></td></tr>
+        <tr><td>癸烷</td><td>C<sub>10</sub>H<sub>22</sub></td></tr>
+      </table>
+    
+      <h3>烯類 (n=2-4)</h3>
+      <table>
+        <tr><td>乙烯</td><td>C<sub>2</sub>H<sub>4</sub></td></tr>
+        <tr><td>丙烯</td><td>C<sub>3</sub>H<sub>6</sub></td></tr>
+        <tr><td>丁烯</td><td>C<sub>4</sub>H<sub>8</sub></td></tr>
+      </table>
+    
+      <h3>炔類 (n=2-4)</h3>
+      <table>
+        <tr><td>乙炔</td><td>C<sub>2</sub>H<sub>2</sub></td></tr>
+        <tr><td>丙炔</td><td>C<sub>3</sub>H<sub>4</sub></td></tr>
+        <tr><td>丁炔</td><td>C<sub>4</sub>H<sub>6</sub></td></tr>
+      </table>
+    
+      <h3>環烷類 (n=3)</h3>
+      <table>
+        <tr><td>環丙烷</td><td>C<sub>3</sub>H<sub>6</sub></td></tr>
+      </table>
+    
+      <h3>醇類 (n=1-6)</h3>
+      <table>
+        <tr><td>甲醇</td><td>CH<sub>3</sub>OH</td></tr>
+        <tr><td>乙醇</td><td>C<sub>2</sub>H<sub>5</sub>OH</td></tr>
+        <tr><td>丙醇</td><td>C<sub>3</sub>H<sub>7</sub>OH</td></tr>
+        <tr><td>丁醇</td><td>C<sub>4</sub>H<sub>9</sub>OH</td></tr>
+        <tr><td>戊醇</td><td>C://H11OH</td><tr><td>戊醇</td><td>C<sub>5</sub>H<sub>11</sub>OH</td></tr>
+        <tr><td>己醇</td><td>C<sub>6</sub>H<sub>13</sub>OH</td></tr>
+      </table>
+    
+      <h3>酸類 / 羧酸 (n=1-4)</h3>
+      <table>
+        <tr><td>甲酸</td><td>HCOOH</td></tr>
+        <tr><td>乙酸</td><td>CH<sub>3</sub>COOH</td></tr>
+        <tr><td>丙酸</td><td>C<sub>2</sub>H<sub>5</sub>COOH</td></tr>
+        <tr><td>丁酸</td><td>C<sub>3</sub>H<sub>7</sub>COOH</td></tr>
+      </table>
+    </section>
+</div>
+
+<script>
+let pool = []; 
+let chosenMode = "1";   // 預設模式：1 (中->英)
+let chosenAmount = 5;  // 預設題數：5
+
+// 網頁初始化與方塊按鈕事件綁定
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. 解析內建題庫
+    const rows = document.querySelectorAll('#database-area table tr');
+    let uniqueCheck = new Set();
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if(cells.length >= 2) {
+            const name = cells[0].innerText.trim();
+            let rawFormula = cells[1].innerHTML;
+            let formulaText = rawFormula
+                .replace(/<sub>/g, '')
+                .replace(/<\/sub>/g, '')
+                .replace(/&middot;/g, '·')
+                .trim();
+            const htmlFormula = cells[1].innerHTML.trim(); 
+            
+            const uniqueKey = name + "|||" + formulaText;
+            if(!uniqueCheck.has(uniqueKey) && name !== "") {
+                uniqueCheck.add(uniqueKey);
+                pool.push({ name: name, formula: formulaText, htmlFormula: htmlFormula });
+            }
+        }
+    });
+    document.getElementById('pool-count-info').innerText = `已成功載入 ${pool.length} 組核心化學式題庫！`;
+
+    // 2. 綁定新版方塊點擊切換事件
+    const selectButtons = document.querySelectorAll('.selectable-btn');
+    selectButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            const value = this.getAttribute('data-value');
+            
+            // 清除同性質按鈕的選取狀態
+            document.querySelectorAll(`.selectable-btn[data-type="${type}"]`).forEach(b => {
+                b.classList.remove('selected');
+            });
+            
+            // 讓當前被點擊的方塊變藍
+            this.classList.add('selected');
+            
+            // 更新全域設定變數
+            if(type === 'mode') {
+                chosenMode = value;
+            } else if(type === 'amount') {
+                chosenAmount = parseInt(value);
+            }
+        });
+    });
+});
+
+let currentQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let timeLeft = 10;
+let timerInterval = null;
+let startTime = null;
+let endTime = null;
+let userHistory = []; 
+
+document.getElementById("answer-input").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        submitAnswer();
+    }
+});
+
+function startQuiz() {
+    if (pool.length === 0) {
+        alert("題庫尚未載入完成，請稍候。");
+        return;
+    }
+
+    let actualAmount = Math.min(chosenAmount, pool.length);
+    let shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+    let selectedRaw = shuffledPool.slice(0, actualAmount);
+    
+    currentQuestions = selectedRaw.map(item => {
+        let currentMode = chosenMode;
+        if (chosenMode === "3") {
+            currentMode = Math.random() > 0.5 ? "1" : "2";
+        }
+        
+        if (currentMode === "1") {
+            return { question: item.name, isHtmlQuestion: false, answer: item.formula, showAnswer: item.htmlFormula };
+        } else {
+            return { question: item.htmlFormula, isHtmlQuestion: true, answer: item.name, showAnswer: item.name };
+        }
+    });
+
+    currentIndex = 0;
+    score = 0;
+    userHistory = [];
+    startTime = new Date(); 
+
+    document.getElementById("database-area").classList.remove("show");
+    switchCard("quiz-card");
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentIndex >= currentQuestions.length) {
+        endQuiz();
+        return;
+    }
+
+    document.getElementById("progress-text").innerText = `進度: ${currentIndex + 1} / ${currentQuestions.length}`;
+    document.getElementById("score-text").innerText = `目前得分: ${score}`;
+    
+    let qEl = document.getElementById("question-text");
+    let currentQ = currentQuestions[currentIndex];
+    
+    if (currentQ.isHtmlQuestion) {
+        qEl.innerHTML = currentQ.question;
+    } else {
+        qEl.innerText = currentQ.question;
+    }
+    
+    let inputEl = document.getElementById("answer-input");
+    inputEl.value = "";
+    setTimeout(() => { inputEl.focus(); }, 50);
+
+    timeLeft = 10;
+    document.getElementById("timer-display").innerText = timeLeft;
+    
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer-display").innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            submitAnswer(true); 
+        }
+    }, 1000);
+}
+
+function submitAnswer(isTimeout = false) {
+    clearInterval(timerInterval); 
+    
+    let currentQ = currentQuestions[currentIndex];
+    let userAnswer = document.getElementById("answer-input").value.trim();
+    
+    if (isTimeout) {
+        userAnswer = "（時間到未作答）";
+    }
+
+    let isCorrect = false;
+    if (!isTimeout) {
+        // 比對時自動忽略大小寫與空格
+        isCorrect = (userAnswer.replace(/\s+/g, '').toLowerCase() === currentQ.answer.replace(/\s+/g, '').toLowerCase());
+    }
+    
+    if (isCorrect) score++;
+
+    userHistory.push({
+        question: currentQ.question,
+        isHtml: currentQ.isHtmlQuestion,
+        correctAnswer: currentQ.showAnswer,
+        userAnswer: userAnswer,
+        isCorrect: isCorrect
+    });
+
+    currentIndex++;
+    showQuestion(); 
+}
+
+function endQuiz() {
+    endTime = new Date();
+    let totalTimeUsed = ((endTime - startTime) / 1000).toFixed(1);
+
+    switchCard("result-card");
+
+    document.getElementById("summary-text").innerHTML = 
+        `⏱️ 總共花費：<span style="color:var(--primary); font-size: 22px;">${totalTimeUsed}</span> 秒<br>` +
+        `🎯 最終得分：<span style="color:var(--success); font-size: 22px;">${score}</span> / ${currentQuestions.length} 題`;
+
+    let detailsHtml = "";
+    userHistory.forEach((item, idx) => {
+        let statusClass = item.isCorrect ? "correct" : "wrong";
+        let statusSymbol = item.isCorrect ? "✅ 正確" : "❌ 錯誤";
+        
+        detailsHtml += `
+            <div class="result-item ${statusClass}">
+                <strong>第 ${idx+1} 題：${item.question}</strong> [${statusSymbol}]<br>
+                您的答案：<code>${item.userAnswer}</code> <br>
+                標準答案：<code>${item.correctAnswer}</code>
+            </div>
+        `;
+    });
+    document.getElementById("detailed-results").innerHTML = detailsHtml;
+}
+
+function switchCard(cardId) {
+    document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+    document.getElementById(cardId).classList.add('active');
+}
+
+function resetQuiz() {
+    switchCard("setup-card");
+}
+
+function toggleDatabase() {
+    const dbArea = document.getElementById("database-area");
+    dbArea.classList.toggle("show");
+    if(dbArea.classList.contains("show")){
+        dbArea.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+</script>
+
+</body>
+</html>
